@@ -44,3 +44,12 @@ with the following changes:
 * C startup code: process .idata init table
 * main: added dummy initialized/uninitialized arrays to place some content into .data/.bss
 * Makefile: additional build step to invoke the compressor tool
+
+## Build
+
+Requirements: `arm-none-eabi-gcc` toolchain in $PATH
+* build decompressors by invoking `make` in `compression`
+* build the sample code by invoking `make` in `sample/make`.
+  The intermediate noncompressed ELF will be output to `build/Demo.elf'.
+  The compressed ELF will be output to `build/Demo.comp.elf`.
+  Try `arm-none-eabi-readelf -e` on both of them to see the difference
