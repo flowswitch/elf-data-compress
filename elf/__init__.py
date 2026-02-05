@@ -75,8 +75,8 @@ class ELF:
         if not self.readonly and self.header.shoff and self.header.shnum and (self.header.shoff + self.header.shnum*self.header.shentsize)!=len(data):
             raise ELFError("Incompatible writable ELF layout: SHT is not at the end")
 
-        logging.info("%d segments", self.header.phnum)
-        logging.info("%d sections", self.header.shnum)
+        logging.debug("%d segments", self.header.phnum)
+        logging.debug("%d sections", self.header.shnum)
 
         self.segments = ELFSegmentTable(self.header.bitness)
         self.segments.unpack_from(data, self.header.phoff, n_items=self.header.phnum)

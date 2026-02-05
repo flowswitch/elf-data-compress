@@ -49,11 +49,11 @@ class ELFHeader(ELFItem):
             self.ident_pad, self.typ, self.machine, self.version) = unpack_from('<BBBBB7sHHI', data, 4)
 
         if self.ident_class==1:
-            logging.info("ELF32")
+            logging.debug("ELF32")
             self.bitness=32
             self.addr_format = 'I'
         elif self.ident_class==2:
-            logging.info("ELF64")
+            logging.debug("ELF64")
             self.bitness=64
             self.addr_format = 'Q'
         else:

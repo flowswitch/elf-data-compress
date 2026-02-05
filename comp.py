@@ -42,6 +42,7 @@ from compression import algos
 if len(argv)!=4:
 	exit("Usage: "+argv[0]+" <arch> <infile.elf> <outfile.elf>")
 
+# TODO: -v parameter
 
 class CompressedData:
 	def __init__(self, algo, src, dst: int, size: int) -> None:
@@ -108,7 +109,7 @@ class DecompressorManager:
 		return self.decompressors[algo.name].pack_params(src, dst, size)+pack('<I', self.decompressors[algo.name].address)
 
 
-logging.basicConfig(level=logging.DEBUG, format='%(message)s')		
+logging.basicConfig(level=logging.INFO, format='%(message)s')		
 arch = argv[1]
 
 binary = elf.ELF.from_file(argv[2], readonly=False)
@@ -137,7 +138,7 @@ srcdata = [None] * n_entries
 out_n_entries = 0
 for idx in range(n_entries):
 	src, dst, size, pfn = unpack('<4I', binary.read_from_va(table_p+4+idx*16, 16))
-	logging.info("%2d: %08X -> %08X [%08X]" % (idx, src, dst, size))
+	logging.debug("%2d: %08X -> %08X [%08X]" % (idx, src, dst, size))
 	if not size:
 		continue
 	out_n_entries += 1
@@ -167,7 +168,7 @@ for idx in range(n_entries):
 			break
 	if best_algo is None:
 		exit("Can't compress !")
-	logging.info("\tBest algo: %s (%X -> %X)" % (best_algo.name, len(raw_data), best_size))
+	logging.debug("\tBest algo: %s (%X -> %X)" % (best_algo.name, len(raw_data), best_size))
 	dm.add(best_algo)
 	srcdata[idx] = CompressedData(best_algo, best_data, dst, size)
 	sct = binary.find_section_by_va(dst)
