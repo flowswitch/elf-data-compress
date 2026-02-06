@@ -28,21 +28,38 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 '''
 
+import argparse
 
-from sys import argv, exit
-from struct import pack, unpack
+parser = argparse.ArgumentParser(description='Compress ARM ELF data sections')
+parser.add_argument('architecture', choices=('cortex-m0', 'cortex-m0plus', 'cortex-m3', 'cortex-m4', 'cortex-m7'))
+parser.add_argument('infile')
+parser.add_argument('outfile')
+parser.add_argument('-v', '--verbose',
+    action='count',
+	default=0,
+	help="Verbosity level. Add more for more")
+args = parser.parse_args()
+
 import logging
+
+if args.verbose>1:
+	loglevel = logging.DEBUG
+elif args.verbose>0:
+	loglevel = logging.INFO
+else:
+	loglevel = logging.WARNING
+
+logging.basicConfig(level=loglevel, format='%(message)s')		
+
+
+from sys import exit
+from struct import pack, unpack
 
 from numpy import add
 
 import elf
 from compression import algos
 
-
-if len(argv)!=4:
-	exit("Usage: "+argv[0]+" <arch> <infile.elf> <outfile.elf>")
-
-# TODO: -v parameter
 
 class CompressedData:
 	def __init__(self, algo, src, dst: int, size: int) -> None:
@@ -109,10 +126,7 @@ class DecompressorManager:
 		return self.decompressors[algo.name].pack_params(src, dst, size)+pack('<I', self.decompressors[algo.name].address)
 
 
-logging.basicConfig(level=logging.INFO, format='%(message)s')		
-arch = argv[1]
-
-binary = elf.ELF.from_file(argv[2], readonly=False)
+binary = elf.ELF.from_file(args.infile, readonly=False)
 if binary.header.bitness!=32:
 	exit('Unsupported ELF bitness %d' % (binary.bitness))
 
@@ -148,7 +162,7 @@ for idx in range(n_entries):
 	raw_data = binary.read_from_va(dst, size)
 	for algo in algos:
 		logging.debug("\tTrying "+algo.name)
-		comper = algo(arch)
+		comper = algo(args.architecture)
 		comp_data = comper.compress(raw_data)
 		if comp_data is None: # this algo can't compress this kind of data
 			logging.debug("\t\tn/a")
@@ -213,7 +227,6 @@ logging.info("Shrinking .idata...")
 binary.sections[table_sym.shndx].size = len(image)
 
 logging.info("Saving...")
-open(argv[3], 'wb').write(binary.pack())
+open(args.outfile, 'wb').write(binary.pack())
 
 logging.info("Done")
-exit(0)
